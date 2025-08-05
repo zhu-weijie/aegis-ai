@@ -1,6 +1,10 @@
 # Core Application
 fastapi
 uvicorn[standard]
+sqlalchemy
+psycopg-binary
+alembic
+pydantic-settings
 
 # Tooling
 pip-tools

@@ -4,3 +4,5 @@ uvicorn[standard]
 
 # Tooling
 pip-tools
+ruff
+black

@@ -3,7 +3,11 @@ from sqlalchemy.orm import Session
 
 from api.core.database import get_db
 from api.models.phishing import PhishingAnalysis
-from api.schemas.phishing import EmailAnalysisRequest, EmailAnalysisResponse
+from api.schemas.phishing import (
+    EmailAnalysisRequest,
+    EmailAnalysisResponse,
+    PhishingAnalysisResult,
+)
 from api.services.phishing_analyzer import analyze_email_content
 
 router = APIRouter()
@@ -56,7 +60,7 @@ def analyze_email(
     return db_analysis
 
 
-@router.get("/analyze/email/{analysis_id}", response_model=PhishingAnalysis)
+@router.get("/analyze/email/{analysis_id}", response_model=PhishingAnalysisResult)
 def get_analysis_result(analysis_id: int, db: Session = Depends(get_db)):
     db_analysis = (
         db.query(PhishingAnalysis).filter(PhishingAnalysis.id == analysis_id).first()

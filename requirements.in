@@ -7,6 +7,9 @@ alembic
 pydantic-settings
 langchain
 langchain-openai
+langchain-community
+tiktoken
+faiss-cpu
 
 # Tooling
 pip-tools

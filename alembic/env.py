@@ -11,7 +11,7 @@ load_dotenv(".env.local")
 # access to the values within the .ini file in use.
 config = context.config
 db_url = (
-    f"postgresql+psycopg://"
+    f"postgresql+psycopg2://"
     f"{os.getenv('POSTGRES_USER')}:{os.getenv('POSTGRES_PASSWORD')}"
     f"@{os.getenv('POSTGRES_SERVER')}/{os.getenv('POSTGRES_DB')}"
 )

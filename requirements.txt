@@ -45,7 +45,7 @@ pip-tools==7.5.0
     # via -r requirements.in
 platformdirs==4.3.8
     # via black
-psycopg-binary==3.2.9
+psycopg2-binary==2.9.10
     # via -r requirements.in
 pydantic==2.11.7
     # via

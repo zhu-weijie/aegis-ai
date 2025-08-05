@@ -1,0 +1,6 @@
+# Core Application
+fastapi
+uvicorn[standard]
+
+# Tooling
+pip-tools

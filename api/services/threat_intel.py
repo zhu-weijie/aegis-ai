@@ -7,7 +7,6 @@ from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
 VECTOR_STORE_PATH = "vector_store/faiss_index"
 embeddings = OpenAIEmbeddings()
-llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0)
 
 
 def ingest_text(text: str) -> dict:
@@ -32,6 +31,7 @@ def ingest_text(text: str) -> dict:
 
 
 def query_threat_intel(query: str) -> dict:
+    llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0)
     if not os.path.exists(VECTOR_STORE_PATH):
         return {
             "answer": "No threat intelligence data has been ingested yet. "

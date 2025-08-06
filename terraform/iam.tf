@@ -74,8 +74,6 @@ resource "aws_iam_policy" "github_actions_deploy_policy" {
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
-      # --- THIS STATEMENT IS SPLIT INTO TWO ---
-
       # 1. Allow getting the login token for the entire region
       {
         Effect   = "Allow"
@@ -84,27 +82,35 @@ resource "aws_iam_policy" "github_actions_deploy_policy" {
       },
       # 2. Allow pushing images only to our specific repository
       {
-        Effect   = "Allow"
-        Action   = [
-            "ecr:BatchCheckLayerAvailability",
-            "ecr:CompleteLayerUpload",
-            "ecr:InitiateLayerUpload",
-            "ecr:PutImage",
-            "ecr:UploadLayerPart"
+        Effect = "Allow"
+        Action = [
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:CompleteLayerUpload",
+          "ecr:InitiateLayerUpload",
+          "ecr:PutImage",
+          "ecr:UploadLayerPart"
         ]
         Resource = aws_ecr_repository.api.arn
       },
-      # --- The ECS statement remains the same ---
+      # 3. The ECS statement remains the same
       {
-        Effect   = "Allow"
-        Action   = [
-            "ecs:DescribeServices", 
-            "ecs:DescribeTaskDefinition", 
-            "ecs:RegisterTaskDefinition", 
-            "ecs:UpdateService"
+        Effect = "Allow"
+        Action = [
+          "ecs:DescribeServices",
+          "ecs:DescribeTaskDefinition",
+          "ecs:RegisterTaskDefinition",
+          "ecs:UpdateService"
         ]
         Resource = "*" # Simplified for this project
+      },
+      # --- ADD THIS NEW STATEMENT ---
+      # 4. Allow the deploy role to pass the task execution role to ECS
+      {
+        Effect   = "Allow"
+        Action   = "iam:PassRole"
+        Resource = aws_iam_role.ecs_task_execution_role.arn
       }
+      # ---
     ]
   })
 }

@@ -13,6 +13,7 @@ resource "aws_ecs_task_definition" "api" {
   memory                   = "512"
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
 
+  # This is the definition for our container
   container_definitions = jsonencode([
     {
       name      = "${var.project_name}-api-container"
@@ -23,13 +24,23 @@ resource "aws_ecs_task_definition" "api" {
           containerPort = 8000,
           hostPort      = 8000
         }
-      ]
+      ],
+      # --- ADD THIS ENTIRE BLOCK ---
+      logConfiguration = {
+        logDriver = "awslogs",
+        options = {
+          "awslogs-group"         = aws_cloudwatch_log_group.api.name,
+          "awslogs-region"        = var.aws_region,
+          "awslogs-stream-prefix" = "ecs"
+        }
+      },
+      # ---
       secrets = [
         {
           name      = "POSTGRES_PASSWORD"
           valueFrom = aws_secretsmanager_secret.db_password.arn
         }
-      ]
+      ],
       environment = [
         {
           name  = "POSTGRES_USER"
@@ -45,7 +56,7 @@ resource "aws_ecs_task_definition" "api" {
         },
         {
           name      = "OPENAI_API_KEY",
-          valueFrom = "arn:aws:secretsmanager:ap-southeast-1:215288576473:secret:aegis-ai/openai-api-key-ETtHXe"
+          valueFrom = "arn:aws:secretsmanager:ap-southeast-1:215288576473:secret:OPENAI_API_KEY-i2wK1a"
         }
       ]
     }

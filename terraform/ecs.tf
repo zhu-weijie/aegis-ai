@@ -70,6 +70,8 @@ resource "aws_ecs_service" "api" {
   launch_type     = "FARGATE"
   desired_count   = 1
 
+  enable_execute_command = true
+
   network_configuration {
     subnets          = aws_subnet.public[*].id
     security_groups  = [aws_security_group.ecs_service.id]

@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 env:
-  AWS_ACCOUNT_ID: <YOUR_AWS_ACCOUNT_ID> # <-- REPLACE THIS
+  AWS_ACCOUNT_ID: 215288576473
   AWS_REGION: ap-southeast-1
   ECR_REPOSITORY: aegis-ai/api
   ECS_CLUSTER: aegis-ai-cluster

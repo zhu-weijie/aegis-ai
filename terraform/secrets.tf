@@ -1,3 +1,7 @@
+resource "random_id" "secret_suffix" {
+  byte_length = 4 # Creates an 8-character hex string
+}
+
 resource "random_password" "db_password" {
   length           = 20
   special          = true
@@ -5,7 +9,8 @@ resource "random_password" "db_password" {
 }
 
 resource "aws_secretsmanager_secret" "db_password" {
-  name = "${var.project_name}/db-password"
+  name = "${var.project_name}/db-password-${random_id.secret_suffix.hex}"
+
   tags = {
     Name = "${var.project_name}-db-password-secret"
   }

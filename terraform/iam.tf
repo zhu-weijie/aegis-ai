@@ -82,24 +82,24 @@ resource "aws_iam_policy" "github_actions_deploy_policy" {
       },
       # 2. Allow pushing images only to our specific repository
       {
-        Effect   = "Allow"
-        Action   = [
-            "ecr:BatchCheckLayerAvailability",
-            "ecr:CompleteLayerUpload",
-            "ecr:InitiateLayerUpload",
-            "ecr:PutImage",
-            "ecr:UploadLayerPart"
+        Effect = "Allow"
+        Action = [
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:CompleteLayerUpload",
+          "ecr:InitiateLayerUpload",
+          "ecr:PutImage",
+          "ecr:UploadLayerPart"
         ]
         Resource = aws_ecr_repository.api.arn
       },
       # 3. The ECS statement remains the same
       {
-        Effect   = "Allow"
-        Action   = [
-            "ecs:DescribeServices",
-            "ecs:DescribeTaskDefinition",
-            "ecs:RegisterTaskDefinition",
-            "ecs:UpdateService"
+        Effect = "Allow"
+        Action = [
+          "ecs:DescribeServices",
+          "ecs:DescribeTaskDefinition",
+          "ecs:RegisterTaskDefinition",
+          "ecs:UpdateService"
         ]
         Resource = "*" # Simplified for this project
       },

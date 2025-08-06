@@ -11,6 +11,7 @@ env:
   ECS_SERVICE: aegis-ai-api-service
   ECS_TASK_DEFINITION_FAMILY: aegis-ai-api-task
   ECS_TASK_DEFINITION_FILE: task-definition.json
+  CONTAINER_NAME: aegis-ai-api-container
 
 jobs:
   deploy:
@@ -51,7 +52,7 @@ jobs:
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: ${{ env.ECS_TASK_DEFINITION_FILE }}
-          container-name: aegis-ai-api-container
+          container-name: ${{ env.CONTAINER_NAME }}
           image: ${{ steps.build-image.outputs.image_uri }}
 
       - name: Deploy Amazon ECS task definition

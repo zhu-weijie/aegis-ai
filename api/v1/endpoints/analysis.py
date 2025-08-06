@@ -9,6 +9,7 @@ from api.schemas.phishing import (
     PhishingAnalysisResult,
 )
 from api.services.phishing_analyzer import analyze_email_content
+from api.services.threat_intel import query_threat_intel
 
 router = APIRouter()
 
@@ -19,13 +20,26 @@ def run_phishing_analysis(
     print(f"Starting analysis for task ID: {analysis_id}")
     analysis_result = analyze_email_content(sender, subject, body)
 
+    iocs = analysis_result.get("iocs", {})
+    iocs_to_query = iocs.get("domains", []) + iocs.get("urls", [])
+    intel_context = {}
+
+    if iocs_to_query:
+        print(f"Correlating IoCs for task ID {analysis_id}: {iocs_to_query}")
+        for ioc in iocs_to_query:
+            query = f"What is the significance of the indicator '{ioc}'?"
+            context_result = query_threat_intel(query=query)
+            if context_result.get("source_found"):
+                intel_context[ioc] = context_result.get("answer")
+
     db_analysis = (
         db.query(PhishingAnalysis).filter(PhishingAnalysis.id == analysis_id).first()
     )
     if db_analysis:
         db_analysis.justification = analysis_result.get("justification")
         db_analysis.risk_score = analysis_result.get("risk_score")
-        db_analysis.indicators_of_compromise = analysis_result.get("iocs")
+        db_analysis.indicators_of_compromise = iocs
+        db_analysis.threat_intel_context = intel_context
         db_analysis.status = "COMPLETED"
         db.commit()
         print(f"Analysis complete for task ID: {analysis_id}")

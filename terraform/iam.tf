@@ -74,14 +74,35 @@ resource "aws_iam_policy" "github_actions_deploy_policy" {
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
+      # --- THIS STATEMENT IS SPLIT INTO TWO ---
+
+      # 1. Allow getting the login token for the entire region
       {
         Effect   = "Allow"
-        Action   = ["ecr:GetAuthorizationToken", "ecr:BatchCheckLayerAvailability", "ecr:InitiateLayerUpload", "ecr:UploadLayerPart", "ecr:CompleteLayerUpload", "ecr:PutImage"]
+        Action   = "ecr:GetAuthorizationToken"
+        Resource = "*"
+      },
+      # 2. Allow pushing images only to our specific repository
+      {
+        Effect   = "Allow"
+        Action   = [
+            "ecr:BatchCheckLayerAvailability",
+            "ecr:CompleteLayerUpload",
+            "ecr:InitiateLayerUpload",
+            "ecr:PutImage",
+            "ecr:UploadLayerPart"
+        ]
         Resource = aws_ecr_repository.api.arn
       },
+      # --- The ECS statement remains the same ---
       {
         Effect   = "Allow"
-        Action   = ["ecs:DescribeServices", "ecs:DescribeTaskDefinition", "ecs:RegisterTaskDefinition", "ecs:UpdateService"]
+        Action   = [
+            "ecs:DescribeServices", 
+            "ecs:DescribeTaskDefinition", 
+            "ecs:RegisterTaskDefinition", 
+            "ecs:UpdateService"
+        ]
         Resource = "*" # Simplified for this project
       }
     ]

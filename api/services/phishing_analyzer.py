@@ -4,8 +4,6 @@ from langchain.prompts import ChatPromptTemplate
 from langchain.schema.output_parser import StrOutputParser
 from langchain_openai import ChatOpenAI
 
-llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
-
 PROMPT_TEMPLATE = """
 Act as a cybersecurity analyst. Analyze the following email content
 for signs of phishing.
@@ -41,6 +39,7 @@ Body: {body}
 
 
 def analyze_email_content(sender: str, subject: str, body: str) -> dict:
+    llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
     prompt = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
     chain = prompt | llm | StrOutputParser()
 

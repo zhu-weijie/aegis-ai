@@ -6,7 +6,6 @@ from langchain_community.vectorstores import FAISS
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
 VECTOR_STORE_PATH = "vector_store/faiss_index"
-embeddings = OpenAIEmbeddings()
 
 
 def ingest_text(text: str) -> dict:
@@ -38,6 +37,8 @@ def query_threat_intel(query: str) -> dict:
             "Please ingest a document first.",
             "source_found": False,
         }
+
+    embeddings = OpenAIEmbeddings()
 
     vector_store = FAISS.load_local(
         VECTOR_STORE_PATH, embeddings, allow_dangerous_deserialization=True

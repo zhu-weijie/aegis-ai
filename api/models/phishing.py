@@ -14,3 +14,4 @@ class PhishingAnalysis(Base):
     risk_score = Column(Integer, nullable=True)
     justification = Column(Text, nullable=True)
     indicators_of_compromise = Column(JSON, nullable=True)
+    threat_intel_context = Column(JSON, nullable=True)

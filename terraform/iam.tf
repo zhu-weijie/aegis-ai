@@ -132,3 +132,21 @@ variable "github_repo" {
   type        = string
   default     = "zhu-weijie/aegis-ai"
 }
+
+data "aws_iam_policy_document" "ecs_exec_policy" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "ssmmessages:CreateControlChannel",
+      "ssmmessages:CreateDataChannel",
+      "ssmmessages:OpenControlChannel",
+      "ssmmessages:OpenDataChannel"
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_policy" "ecs_exec_policy" {
+  name   = "${var.project_name}-ecs-exec-policy"
+  policy = data.aws_iam_policy_document.ecs_exec_policy.json
+}

@@ -21,7 +21,7 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_role" {
 }
 
 data "aws_secretsmanager_secret" "openai_api_key" {
-  name = "OPENAI_API_KEY"
+  name = "aegis-ai/openai-api-key"
 }
 
 data "aws_iam_policy_document" "ecs_task_read_secrets" {

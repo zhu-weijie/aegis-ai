@@ -41,3 +41,62 @@ resource "aws_iam_role_policy_attachment" "ecs_task_read_secrets" {
   role       = aws_iam_role.ecs_task_execution_role.name
   policy_arn = aws_iam_policy.ecs_task_read_secrets.arn
 }
+
+# --- ADD THIS BLOCK FOR GITHUB ACTIONS ---
+
+# IAM Role that GitHub Actions will assume to deploy the application
+resource "aws_iam_role" "github_actions_deploy_role" {
+  name = "GitHubActionsDeployRole"
+
+  # Policy that allows GitHub's OIDC provider to assume this role
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Federated = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/token.actions.githubusercontent.com"
+        }
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Condition = {
+          StringLike = {
+            "token.actions.githubusercontent.com:sub" = "repo:${var.github_repo}:*"
+          }
+        }
+      }
+    ]
+  })
+}
+
+# Policy allowing the role to push to ECR and deploy to ECS
+resource "aws_iam_policy" "github_actions_deploy_policy" {
+  name = "GitHubActionsDeployPolicy"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["ecr:GetAuthorizationToken", "ecr:BatchCheckLayerAvailability", "ecr:InitiateLayerUpload", "ecr:UploadLayerPart", "ecr:CompleteLayerUpload", "ecr:PutImage"]
+        Resource = aws_ecr_repository.api.arn
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["ecs:DescribeServices", "ecs:DescribeTaskDefinition", "ecs:RegisterTaskDefinition", "ecs:UpdateService"]
+        Resource = "*" # Simplified for this project
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "github_actions_deploy_attachment" {
+  role       = aws_iam_role.github_actions_deploy_role.name
+  policy_arn = aws_iam_policy.github_actions_deploy_policy.arn
+}
+
+data "aws_caller_identity" "current" {}
+
+variable "github_repo" {
+  description = "Your GitHub repository in user/repo format."
+  type        = string
+  default     = "zhu-weijie/aegis-ai"
+}

@@ -16,7 +16,6 @@ router = APIRouter()
 def run_phishing_analysis(
     analysis_id: int, sender: str, subject: str, body: str, db: Session
 ):
-    """The actual analysis function that will run in the background."""
     print(f"Starting analysis for task ID: {analysis_id}")
     analysis_result = analyze_email_content(sender, subject, body)
 
@@ -26,6 +25,7 @@ def run_phishing_analysis(
     if db_analysis:
         db_analysis.justification = analysis_result.get("justification")
         db_analysis.risk_score = analysis_result.get("risk_score")
+        db_analysis.indicators_of_compromise = analysis_result.get("iocs")
         db_analysis.status = "COMPLETED"
         db.commit()
         print(f"Analysis complete for task ID: {analysis_id}")

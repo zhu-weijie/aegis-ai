@@ -37,8 +37,12 @@ resource "aws_ecs_task_definition" "api" {
       # ---
       secrets = [
         {
-          name      = "POSTGRES_PASSWORD"
+          name      = "POSTGRES_PASSWORD",
           valueFrom = aws_secretsmanager_secret.db_password.arn
+        },
+        {
+          name      = "OPENAI_API_KEY",
+          valueFrom = "arn:aws:secretsmanager:ap-southeast-1:215288576473:secret:OPENAI_API_KEY-i2wK1a"
         }
       ],
       environment = [
@@ -53,10 +57,6 @@ resource "aws_ecs_task_definition" "api" {
         {
           name  = "POSTGRES_SERVER"
           value = aws_db_instance.main.address
-        },
-        {
-          name      = "OPENAI_API_KEY",
-          valueFrom = "arn:aws:secretsmanager:ap-southeast-1:215288576473:secret:OPENAI_API_KEY-i2wK1a"
         }
       ]
     }

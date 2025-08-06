@@ -20,6 +20,10 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_role" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
+data "aws_secretsmanager_secret" "openai_api_key" {
+  name = "aegis-ai/openai-api-key"
+}
+
 data "aws_iam_policy_document" "ecs_task_read_secrets" {
   statement {
     effect = "Allow"
@@ -27,7 +31,8 @@ data "aws_iam_policy_document" "ecs_task_read_secrets" {
       "secretsmanager:GetSecretValue"
     ]
     resources = [
-      aws_secretsmanager_secret.db_password.arn
+      aws_secretsmanager_secret.db_password.arn,
+      data.aws_secretsmanager_secret.openai_api_key.arn
     ]
   }
 }

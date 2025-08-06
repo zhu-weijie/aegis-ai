@@ -42,7 +42,7 @@ resource "aws_ecs_task_definition" "api" {
         },
         {
           name      = "OPENAI_API_KEY",
-          valueFrom = "arn:aws:secretsmanager:ap-southeast-1:215288576473:secret:OPENAI_API_KEY-i2wK1a"
+          valueFrom = "${data.aws_secretsmanager_secret.openai_api_key.arn}:OPENAI_API_KEY::"
         }
       ],
       environment = [

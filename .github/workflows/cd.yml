@@ -9,6 +9,7 @@ env:
   ECR_REPOSITORY: aegis-ai/api
   ECS_CLUSTER: aegis-ai-cluster
   ECS_SERVICE: aegis-ai-api-service
+  ECS_TASK_DEFINITION_FAMILY: aegis-ai-api-task
   ECS_TASK_DEFINITION_FILE: task-definition.json
 
 jobs:
@@ -43,7 +44,7 @@ jobs:
 
       - name: Download existing ECS task definition
         run: |
-          aws ecs describe-task-definition --task-definition ${{ env.ECS_SERVICE }} --query taskDefinition > ${{ env.ECS_TASK_DEFINITION_FILE }}
+          aws ecs describe-task-definition --task-definition ${{ env.ECS_TASK_DEFINITION_FAMILY }} --query taskDefinition > ${{ env.ECS_TASK_DEFINITION_FILE }}
 
       - name: Update ECS task definition with new image
         id: task-def

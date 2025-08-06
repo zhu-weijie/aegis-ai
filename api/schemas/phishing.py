@@ -23,5 +23,6 @@ class PhishingAnalysisResult(BaseModel):
     risk_score: Optional[int] = None
     justification: Optional[str] = None
     indicators_of_compromise: Optional[dict[str, Any]] = None
+    threat_intel_context: Optional[dict[str, Any]] = None
 
     model_config = ConfigDict(from_attributes=True)

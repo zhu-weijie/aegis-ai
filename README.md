@@ -106,3 +106,239 @@ The project has successfully implemented all core features and the full DevOps p
 -   [x] CI Pipeline with GitHub Actions
 -   [x] Full AWS infrastructure provisioned with Terraform
 -   [x] CD Pipeline with GitHub Actions
+
+## Design Diagrams
+
+### Phishing Analysis Sequence Diagram
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant API as "FastAPI Endpoint"
+    participant DB as "PostgreSQL Database"
+    participant Analyzer as "PhishingAnalyzerService"
+    participant ThreatIntel as "ThreatIntelService"
+    participant VectorStore as "Vector Store (FAISS)"
+    participant LLM as "LangChain (LLM)"
+
+    %% Initial Request/Response
+    User->>+API: POST /api/v1/analyze/email
+    API->>+DB: INSERT new analysis (status='PENDING')
+    DB-->>-API: Return new analysis ID
+    Note right of API: Background task is scheduled
+    API-->>-User: 200 OK (id, status='PENDING')
+
+    %% Background Processing
+    rect rgb(235, 245, 255)
+        note over API, LLM: The following runs in the background
+        API->>+Analyzer: run_phishing_analysis(id, email_data)
+        
+        %% AI Analysis
+        Analyzer->>+LLM: Analyze content for risk & IoCs
+        LLM-->>-Analyzer: Return justification, score, and extracted IoCs
+
+        %% Threat Correlation Loop (RAG Pattern)
+        loop For each IoC (domain, URL)
+            Analyzer->>+ThreatIntel: query_threat_intel(ioc)
+            
+            %% Step 1: Retrieval
+            ThreatIntel->>+VectorStore: Similarity search for IoC
+            VectorStore-->>-ThreatIntel: Return relevant document chunks
+            
+            %% Step 2: Generation
+            ThreatIntel->>+LLM: Ask for summary based on chunks
+            LLM-->>-ThreatIntel: Return synthesized context
+            
+            ThreatIntel-->>-Analyzer: Return context string
+        end
+
+        %% Final Database Update
+        Analyzer->>+DB: UPDATE analysis SET score, iocs, context, status='COMPLETED'
+        DB-->>-Analyzer: OK
+        deactivate Analyzer
+    end
+```
+
+### Threat Intelligence RAG Sequence Diagram
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant API as "FastAPI Endpoint"
+    participant RAG_Service as "ThreatIntelService"
+    participant VectorStore as "Vector Store (FAISS)"
+    participant LLM as "LangChain (LLM)"
+
+    User->>+API: POST /api/v1/threat-intel/query
+    API->>+RAG_Service: query_threat_intel(user_question)
+
+    %% Step 1: Retrieval
+    rect rgb(230, 255, 230)
+        note over RAG_Service, VectorStore: Step 1: Retrieve relevant context
+        RAG_Service->>+VectorStore: Similarity search with user_question
+        VectorStore-->>-RAG_Service: Return relevant document chunks
+    end
+
+    %% Step 2: Augmentation & Generation
+    rect rgb(255, 245, 230)
+        note over RAG_Service, LLM: Step 2: Augment prompt and Generate answer
+        RAG_Service->>+LLM: Send prompt (user_question + retrieved chunks)
+        LLM-->>-RAG_Service: Return synthesized answer
+    end
+    
+    RAG_Service-->>-API: Return final answer
+    API-->>-User: 200 OK (answer)
+```
+
+### Class Diagram
+
+```mermaid
+classDiagram
+    direction TD
+
+    %% Define the main components and group them by layer/module
+    namespace FastAPI_Application {
+        class App {
+            +main: FastAPI
+            +include_router()
+        }
+    }
+
+    namespace API_v1_Endpoints {
+        class AnalysisRouter {
+            +POST /analyze/email
+            +GET /analyze/email/[id]
+        }
+        class ThreatIntelRouter {
+            +POST /threat-intel/ingest
+            +POST /threat-intel/query
+        }
+    }
+
+    namespace Services {
+        class PhishingAnalyzerService {
+            +analyze_email_content()
+        }
+        class ThreatIntelService {
+            +ingest_text()
+            +query_threat_intel()
+        }
+    }
+
+    namespace Schemas_Pydantic {
+        class EmailAnalysisRequest
+        class PhishingAnalysisResult
+        class TextIngestionRequest
+        class ThreatIntelQueryRequest
+    }
+
+    namespace Models_SQLAlchemy {
+        class PhishingAnalysis {
+            +id: int
+            +status: str
+            +risk_score: int
+            +justification: str
+            +iocs: JSON
+            +threat_intel_context: JSON
+        }
+        class Base {
+            <<DeclarativeBase>>
+        }
+    }
+
+    namespace Core {
+        class Database {
+            +get_db()
+        }
+    }
+    
+    namespace External_Libraries {
+        class LangChain_OpenAI {
+            +ChatOpenAI
+            +OpenAIEmbeddings
+        }
+        class LangChain_Chains {
+            +RetrievalQA
+        }
+    }
+
+    %% Define the relationships between the components
+    App --> AnalysisRouter : includes
+    App --> ThreatIntelRouter : includes
+
+    AnalysisRouter --> PhishingAnalyzerService : uses
+    AnalysisRouter --> Schemas_Pydantic.EmailAnalysisRequest : validates with
+    AnalysisRouter --> Schemas_Pydantic.PhishingAnalysisResult : responds with
+    AnalysisRouter --> Core.Database : depends on
+
+    ThreatIntelRouter --> ThreatIntelService : uses
+    ThreatIntelRouter --> Schemas_Pydantic.TextIngestionRequest : validates with
+    ThreatIntelRouter --> Schemas_Pydantic.ThreatIntelQueryRequest : validates with
+
+    PhishingAnalyzerService --> Models_SQLAlchemy.PhishingAnalysis : creates/updates
+    PhishingAnalyzerService --> External_Libraries.LangChain_OpenAI : invokes
+
+    ThreatIntelService --> External_Libraries.LangChain_OpenAI : invokes
+    ThreatIntelService --> External_Libraries.LangChain_Chains : uses
+
+    Models_SQLAlchemy.PhishingAnalysis --|> Models_SQLAlchemy.Base : inherits from
+```
+
+### AWS Infrastructure Diagram
+
+```mermaid
+graph TD
+    subgraph "Developer Environment"
+        Dev(Developer) -- "git push" --> Github(GitHub Repository)
+    end
+
+    subgraph "CI/CD Pipeline (GitHub Actions)"
+        Github -- "triggers" --> GA(GitHub Actions)
+        GA -- "Step 1: Assume Role (OIDC)" --> IAM_GHA(IAM Role for GHA)
+        GA -- "Step 2: Build & Push Image" --> ECR["ECR Repository<br>aegis-ai/api"]
+        GA -- "Step 3: Deploy New Version" --> ECS_Service["ECS Fargate Service<br>aegis-ai-api-service"]
+    end
+
+    subgraph "AWS Cloud (ap-southeast-1)"
+        subgraph "VPC (aegis-ai-vpc)"
+            subgraph "Public Subnets"
+                User(End User) -- "HTTPS:8000" --> IGW(Internet Gateway)
+                IGW --> ECS_Service
+                NAT(NAT Gateway)
+            end
+
+            subgraph "Private Subnets"
+                RouteTable_Private(Private Route Table) <--> RDS["RDS PostgreSQL<br>aegis-ai-db"]
+                RouteTable_Private -- "routes to" --> NAT
+            end
+
+            subgraph "Services & Security"
+                Secrets(Secrets Manager)
+                CloudWatch(CloudWatch Logs)
+                IAM_ECS(IAM Role for ECS Task)
+                IAM_GHA
+            end
+
+            ECS_Service -- "Runs" --> Task["ECS Task<br>aegis-ai-api-task"]
+            Task -- "reads" --> Secrets
+            Task -- "writes to" --> CloudWatch
+            Task -- "uses" --> IAM_ECS
+            Task -- "connects to" --> RDS
+            Task -- "outbound via" --> NAT
+        end
+    end
+
+    %% Styling
+    classDef vpc fill:#FFF5E1,stroke:#000,stroke-width:2px;
+    classDef public fill:#E6F3FF,stroke:#000;
+    classDef private fill:#FFE6E6,stroke:#000;
+    classDef security fill:#E6FFE6,stroke:#000;
+    classDef cicd fill:#F0E6FF,stroke:#000;
+    classDef dev fill:#FFFFFF,stroke:#000;
+    class Dev,Github dev;
+    class GA,ECR cicd;
+    class VPC vpc;
+    class IGW,ECS_Service,NAT,User public;
+    class RouteTable_Private,RDS private;
+    class Secrets,CloudWatch,IAM_ECS,IAM_GHA,Task security;
+```

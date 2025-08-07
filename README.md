@@ -3,7 +3,6 @@
 *An AI-Powered Cyber Data Risk & Resilience Platform*
 
 [![CI](https://github.com/zhu-weijie/aegis-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/zhu-weijie/aegis-ai/actions/workflows/ci.yml)
-[![CD](https://github.com/zhu-weijie/aegis-ai/actions/workflows/cd.yml/badge.svg)](https://github.com/zhu-weijie/aegis-ai/actions/workflows/cd.yml)
 
 ## About The Project
 
@@ -107,4 +106,3 @@ The project has successfully implemented all core features and the full DevOps p
 -   [x] CI Pipeline with GitHub Actions
 -   [x] Full AWS infrastructure provisioned with Terraform
 -   [x] CD Pipeline with GitHub Actions
--   [ ] **Debug: Resolve the "Essential container in task exited" error on ECS.**
